@@ -1,16 +1,23 @@
 library(shiny)
+library(shinyFiles)
+
 
 # Define UI
 ui <- fluidPage(
+
+  
+        
+  
           navbarPage(
 
-              title = span( "clonal_R_evolution", style = "background-color: dark; color: red"),
+              title = span( "clonal_R_evolution", style = "background-color: dark; color: #e80000"),
 
               id = "navbar",
  
               position = "fixed-top", 
 
               inverse=TRUE,
+
                   
                     tabPanel(
   
@@ -49,8 +56,8 @@ ui <- fluidPage(
                         fluidRow(
   
                             column(5,
-                            br(),
-                            fileInput("file", h3("File input")), 
+                            br(),br(),br(),
+                            shinyFilesButton("files", "Insert a file", "Insert a file", multiple = FALSE), 
                             br()
                                    ),
                             
@@ -65,7 +72,7 @@ ui <- fluidPage(
                             
                             
                         
-                            h3("SubClones"), column(3, style = "background-color:orange", 
+                            h3("SubClones"), column(3, style = "background-color:#bf6f62", 
                                    sliderInput("slider1", h3("IGHV similarity"),
                                                min = 0, max = 100, value = 50),
                                    sliderInput("slider1", h3("CDR3 similarity"),
@@ -78,7 +85,7 @@ ui <- fluidPage(
                                          
                                    ),
                             
-                            column(1, style = "background-color:black", br(),br(), actionButton("calculateDominantClone","calculate"), br(),br(),br() 
+                            column(1, style = "background-color:#24180b", br(),br(), actionButton("calculateDominantClone","calculate"), br(),br(),br() 
                                    
                             ),
                             
@@ -97,12 +104,12 @@ ui <- fluidPage(
                         
                         fluidRow( 
                   
-                            column(3,style = "background-color:orange",
+                            column(3,style = "background-color:#bf6f62",
                                 selectInput("select", h3("Select column"), 
                                         choices = list("Sequence.number" = 1, "Sequence.ID" = 2, "Functionality" = 3, "V.GENE.and.allele" = 4, "V.REGION.score" = 5, "V.REGION.identity.." = 6, "V.REGION.identity.nt" = 7, "V.REGION.identity....with.ins.del.events." = 8, "V.REGION.identity.nt..with.ins.del.events." = 9, "J.GENE.and.allele" = 10, "J.REGION.score" = 11, "J.REGION.identity.." = 12, "J.REGION.identity.nt" = 13, "D.GENE.and.allele" = 14, "D.REGION.reading.frame" = 15, "CDR1.IMGT.length" = 16, "CDR2.IMGT.length" = 17, "CDR3.IMGT.length" = 18, "CDR.IMGT.lengths" = 19, "FR.IMGT.lengths" = 20, "AA.JUNCTION",	"JUNCTION.frame" = 21, "Orientation" = 22, "Functionality.comment" = 23, "V.REGION.potential.ins.del" = 24, "J.GENE.and.allele.comment" = 25, "V.REGION.insertions" = 26, "V.REGION.deletions" = 27, "Sequence" = 28, "X" = 29), selected = 1),
                                  
-                                textInput("text", h3("Exclude feature"), 
-                                          value = " "
+                                textInput("text", h3("Include String"), 
+                                          value = ""
                                           ),
                                   br()),
                             
@@ -110,7 +117,7 @@ ui <- fluidPage(
                                
                                   
          
-                            column(1, style = "background-color:black", br(),br(), actionButton("excludeButton","Exclude"), br(),br(),
+                            column(1, style = "background-color:#24180b", br(),br(), 
                                   
                            
                                             actionButton("FilterButton","Filter"),br(),br(),
@@ -133,14 +140,14 @@ ui <- fluidPage(
                        
                        fluidRow(
                            
-                            column(3, style = "background-color:orange", 
+                            column(3, style = "background-color:#bf6f62", 
                                 sliderInput("slider1", h3("IGHV identity"),
                                             min = 0, max = 100, value = 50),
                                 sliderInput("slider1", h3("CDR3 identity"),
                                             min = 0, max = 100, value = 50)
                                    ),
                             
-                            column(1, style = "background-color:black", br(),br(), actionButton("calculateDominantClone","calculate"), br(),br(),br() 
+                            column(1, style = "background-color:#24180b", br(),br(), actionButton("calculateDominantClone","calculate"), br(),br(),br() 
                   
                                    )
                     )
@@ -149,14 +156,23 @@ ui <- fluidPage(
               
               tabPanel(
                 
-                "Filtered Sequences",
+                "Sequences",
                 
                 value = "filtered sequences",
                 
                 tags$style(type="text/css", "body {padding-top: 70px;}"), #padding for navigation bar
+                                 
+                mainPanel(
+                    
+                         
+                        dataTableOutput("table"),br(),br(),br(),br(),
+                        
+                        dataTableOutput("filtered")
+                                
+                  
+                          )  
                 
-                
-              ),
+                       ),
               
               
               tabPanel(
@@ -198,9 +214,9 @@ ui <- fluidPage(
 
 
 # Define server logic ----
-server <- function(input, output) {
-
-}
+# server <- function(input, output) {
+#   
+# }
 
 # Run the app ----
-shinyApp(ui = ui, server = server)
+# shinyApp(ui = ui, option = list(height = 1388))
