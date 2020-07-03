@@ -1,7 +1,9 @@
 library(shiny)
 library(shinyFiles)
-
-
+library(shinyalert)
+library(shinyWidgets)
+library(shinyjs)
+library(dplyr)
 # Define UI
 ui <- fluidPage(
 
@@ -57,16 +59,38 @@ ui <- fluidPage(
   
                             column(5,
                             br(),br(),br(),
-                            shinyFilesButton("files", "Insert a file", "Insert a file", multiple = FALSE), 
-                            br()
-                                   ),
                             
-                             
-                            column(2, br(),br()),
-                            column(2, br()),
+                            shinyDirButton('directory', 'Folder select', 'Please select a folder'),
+                            
+                            br(),
+                            br(),
+                            
+                          
+                            
+                          
+                
+                            uiOutput("uiInputFiles"),
                             
                             br(),
                             
+                            
+                            br(),
+                            useShinyjs(),
+                            tags$style(appCSS),
+                            uiOutput("uiLoadData"),
+                            br(),
+                           
+                            
+                            br(),
+                            br(),
+                            
+                           
+                           
+                            
+                       
+                            
+                            
+                            ),
                             
                            
                             
@@ -85,7 +109,7 @@ ui <- fluidPage(
                                          
                                    ),
                             
-                            column(1, style = "background-color:#24180b", br(),br(), actionButton("calculateDominantClone","calculate"), br(),br(),br() 
+                            column(1, style = "background-color:#1f0a0a", br(),br(), actionButton("calculateDominantClone","calculate"), br(),br(),br() 
                                    
                             ),
                             
@@ -104,7 +128,9 @@ ui <- fluidPage(
                         
                         fluidRow( 
                   
-                            column(3,style = "background-color:#bf6f62",
+                          useShinyalert(),  
+                          
+                          column(3,style = "background-color:#bf6f62",
                                 selectInput("select", h3("Select column"), 
                                         choices = list("Sequence.number" = 1, "Sequence.ID" = 2, "Functionality" = 3, "V.GENE.and.allele" = 4, "V.REGION.score" = 5, "V.REGION.identity.." = 6, "V.REGION.identity.nt" = 7, "V.REGION.identity....with.ins.del.events." = 8, "V.REGION.identity.nt..with.ins.del.events." = 9, "J.GENE.and.allele" = 10, "J.REGION.score" = 11, "J.REGION.identity.." = 12, "J.REGION.identity.nt" = 13, "D.GENE.and.allele" = 14, "D.REGION.reading.frame" = 15, "CDR1.IMGT.length" = 16, "CDR2.IMGT.length" = 17, "CDR3.IMGT.length" = 18, "CDR.IMGT.lengths" = 19, "FR.IMGT.lengths" = 20, "AA.JUNCTION",	"JUNCTION.frame" = 21, "Orientation" = 22, "Functionality.comment" = 23, "V.REGION.potential.ins.del" = 24, "J.GENE.and.allele.comment" = 25, "V.REGION.insertions" = 26, "V.REGION.deletions" = 27, "Sequence" = 28, "X" = 29), selected = 1),
                                  
@@ -117,37 +143,44 @@ ui <- fluidPage(
                                
                                   
          
-                            column(1, style = "background-color:#24180b", br(),br(), 
-                                  
+                            column(1, style = "background-color:#1f0a0a", br(),br(), 
+                                            
+                                            
                            
-                                            actionButton("FilterButton","Filter"),br(),br(),
-                                  
-                                            actionButton("ResetButton","Reset"),br(),br(),br(),br()
-                                  ),
+                                            actionButton("FilterButton","Filter"),
                                    
-                         
-                            column(2,
-                                h6("Filters Used"),
+                                            
+                                   
+                                            br(),br(),
+                                  
+                                            
                                 tableOutput("filtertable"), br() 
                                   )
-                  
+                            
+                            
                         
                                 ),
                        
-                       br(), br(),br(),
+                           br(), br(),br(),
+                       
+                       
+                           
                        
                        h3("Dominant Clone"),
                        
                        fluidRow(
+                         
+                         
                            
                             column(3, style = "background-color:#bf6f62", 
-                                sliderInput("slider1", h3("IGHV identity"),
-                                            min = 0, max = 100, value = 50),
-                                sliderInput("slider1", h3("CDR3 identity"),
-                                            min = 0, max = 100, value = 50)
+                                   selectInput("select_clonotype", "Select type:",c("V Gene and Allele", 
+                                                                                    "V Gene + CDR3 Nucleotide","V Gene and Allele + CDR3 Nucleotide",
+                                                                                    "J Gene + CDR3 Amino Acids", "J Gene + CDR3 Nucleotide",
+                                                                                    "J Gene and Allele + CDR3 Amino Acids", "J Gene and Allele + CDR3 Nucleotide",
+                                                                                    "CDR3 Amino Acids", "CDR3 Nucleotide"), width="320")
                                    ),
                             
-                            column(1, style = "background-color:#24180b", br(),br(), actionButton("calculateDominantClone","calculate"), br(),br(),br() 
+                            column(1, style = "background-color:#30100b", br(),br(), actionButton("calculateDominantClone","calculate"),br(),br() 
                   
                                    )
                     )
@@ -182,7 +215,10 @@ ui <- fluidPage(
                 value = "dominant clone",
                 
                 tags$style(type="text/css", "body {padding-top: 70px;}"), #padding for navigation bar
-              ),
+                
+                dataTableOutput("clonoTable")
+                
+                     ),
               
               
               tabPanel(
