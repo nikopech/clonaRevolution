@@ -69,14 +69,14 @@ ui <- fluidPage(
                             
                           
                 
-                            uiOutput("uiInputFiles"),
+                             uiOutput("uiInputFiles"),
                             
                             br(),
                             
                             
                             br(),
                             useShinyjs(),
-                            tags$style(appCSS),
+                            # tags$style(appCSS),
                             uiOutput("uiLoadData"),
                             br(),
                            
@@ -92,34 +92,36 @@ ui <- fluidPage(
                             
                             ),
                             
-                           
+                            br(),
                             
+                             
                             
-                        
-                            h3("SubClones"), column(3, style = "background-color:#bf6f62", 
-                                   sliderInput("slider1", h3("IGHV similarity"),
-                                               min = 0, max = 100, value = 50),
-                                   sliderInput("slider1", h3("CDR3 similarity"),
-                                               min = 0, max = 100, value = 50),
-                                   
-                                   
-                                          
-                                         
-                                         
-                                         
-                                   ),
-                            
-                            column(1, style = "background-color:#1f0a0a", br(),br(), actionButton("calculateDominantClone","calculate"), br(),br(),br() 
-                                   
-                            ),
-                            
-                            column(3,actionButton("calculateDistances", "Calculate Distances"), 
-                                     br(), br(), 
-                                   actionButton("visgraph", "Visualize Graph")),
-                                   
-                            
-                        
-                                 ),
+                            br(),br(),br(),br(), br(),br(),br(),br(), br()  
+                                                                 
+                            # h3("SubClones"), column(3, style = "background-color:#bf6f62", 
+                            #        sliderInput("slider1", h3("IGHV similarity"),
+                            #                    min = 0, max = 100, value = 50),
+                            #        sliderInput("slider1", h3("CDR3 similarity"),
+                            #                    min = 0, max = 100, value = 50),
+                            #        
+                            #        
+                            #               
+                            #              
+                            #              
+                            #              
+                            #        ),
+                            # 
+                            # column(1, style = "background-color:#1f0a0a", br(),br(), actionButton("calculateDominantClone","calculate"), br(),br(),br() 
+                            #        
+                            # ),
+                            # 
+                            # column(3,actionButton("calculateDistances", "Calculate Distances"), 
+                            #          br(), br(), 
+                            #        actionButton("visgraph", "Visualize Graph")),
+                            #        
+                            # 
+                            # 
+                                  ),
                        
                      
  
@@ -166,21 +168,26 @@ ui <- fluidPage(
                        
                            
                        
-                       h3("Dominant Clone"),
+                       h2("Pipeline"),
                        
                        fluidRow(
                          
                          
                            
                             column(3, style = "background-color:#bf6f62", 
-                                   selectInput("select_clonotype", "Select type:",c("V Gene and Allele", 
+                                   selectInput("select_clonotype", "Calculate Clonotypes by :", c("V Gene + CDR3 Amino Acids","V Gene and Allele + CDR3 Amino Acids", 
                                                                                     "V Gene + CDR3 Nucleotide","V Gene and Allele + CDR3 Nucleotide",
                                                                                     "J Gene + CDR3 Amino Acids", "J Gene + CDR3 Nucleotide",
                                                                                     "J Gene and Allele + CDR3 Amino Acids", "J Gene and Allele + CDR3 Nucleotide",
-                                                                                    "CDR3 Amino Acids", "CDR3 Nucleotide"), width="320")
+                                                                                    "CDR3 Amino Acids", "CDR3 Nucleotide", "V region + CDR3 Amino Acids", "V region and CDR3 Nucleotide") ), br(),br()
                                    ),
                             
-                            column(1, style = "background-color:#30100b", br(),br(), actionButton("calculateDominantClone","calculate"),br(),br() 
+                            column(3, style = "background-color:#bf6f62", 
+                                   numericInput("numeric1", "Calculate Related to Dominant Reads and keep those with Frequency amount greater than...", value = 1)                                                                
+                                   
+                            ),
+                            
+                            column(1, style = "background-color:#30100b", br(),br(), actionButton("Executepipeline","Execute"),br(),br() 
                   
                                    )
                     )
@@ -189,7 +196,7 @@ ui <- fluidPage(
               
               tabPanel(
                 
-                "Sequences",
+                "Loaded Data",
                 
                 value = "filtered sequences",
                 
@@ -198,7 +205,11 @@ ui <- fluidPage(
                 mainPanel(
                     
                          
+                        h2("Raw Data"),br(),br(),
+                        
                         dataTableOutput("table"),br(),br(),br(),br(),
+                        
+                        h2("Filtered Data"),br(),br(),
                         
                         dataTableOutput("filtered")
                                 
@@ -210,16 +221,50 @@ ui <- fluidPage(
               
               tabPanel(
                 
-                "Dominant Clone",
+                "Clonotypes",
                 
                 value = "dominant clone",
                 
                 tags$style(type="text/css", "body {padding-top: 70px;}"), #padding for navigation bar
                 
-                dataTableOutput("clonoTable")
+                h2("All Clonotypes"),br(),br(),
                 
-                     ),
+                dataTableOutput("clonoTable"),br(),
+                
+                actionButton("downloadallclonotypes", "Download"), br(),br(),
+                
+                h2("Dominant Clone"),br(),br(),
               
+               dataTableOutput("thedominant"), br(),
+               
+               actionButton("downloadthedominantclone", "Download")
+               
+                ),
+              
+              
+              
+              
+              tabPanel(
+                
+                "Reads related to Dominant",
+                
+                value = "reads_related",
+                
+                tags$style(type="text/css", "body {padding-top: 70px;}"), #padding for navigation bar
+             
+                h2("Related to Dominant Clone Reads"),
+                
+                 h3("(Same CDR3 length, same IGHV gene family)"), br(),br(),
+                
+              
+                
+                dataTableOutput("relatedtodominant"), br(),
+                
+                actionButton("downloadreadsrelatedtodominant", "Download")
+                
+               
+                
+                 ),
               
               tabPanel(
                 
@@ -228,7 +273,14 @@ ui <- fluidPage(
                 value = "subclones",
                 
                 tags$style(type="text/css", "body {padding-top: 70px;}"), #padding for navigation bar
+                
+               
+                
+                
+                
               )
+              
+              
               
               
               
