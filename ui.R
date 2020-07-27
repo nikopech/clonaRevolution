@@ -125,7 +125,7 @@ ui <- fluidPage(
                        
                      
  
-                        h3("Filters") ,   
+                        h2("Filters") ,   
          
                         
                         fluidRow( 
@@ -182,10 +182,24 @@ ui <- fluidPage(
                                                                                     "CDR3 Amino Acids", "CDR3 Nucleotide", "V region + CDR3 Amino Acids", "V region and CDR3 Nucleotide") ), br(),br()
                                    ),
                             
-                            column(3, style = "background-color:#bf6f62", 
-                                   numericInput("numeric1", "Calculate Related to Dominant Reads and keep those with Frequency amount greater than...", value = 1)                                                                
+                            column(2, style = "background-color:#bf6f62", 
+                                   numericInput("numeric1", "keep clonotypes with frequency amount greater than...", value = 1, br())                                                                
                                    
                             ),
+                            
+                            column(2, style = "background-color:#bf6f62", 
+                                   numericInput("numeric2", "mismatches allowed in Related to Dominant sequences", value = 1, br())                                                                
+                                   
+                            ),
+                            
+                             column(2, style = "background-color:#bf6f62", 
+                                    checkboxInput("check", "specific pattern", value = FALSE, width = NULL),
+                                    
+                                    textInput("pattern", h3("motif"), 
+                                              value = ""
+                                   )
+                                    
+                             ),
                             
                             column(1, style = "background-color:#30100b", br(),br(), actionButton("Executepipeline","Execute"),br(),br() 
                   
@@ -246,7 +260,7 @@ ui <- fluidPage(
               
               tabPanel(
                 
-                "Reads related to Dominant",
+                "Related to Dominant",
                 
                 value = "reads_related",
                 
@@ -260,7 +274,14 @@ ui <- fluidPage(
                 
                 dataTableOutput("relatedtodominant"), br(),
                 
-                actionButton("downloadreadsrelatedtodominant", "Download")
+                #actionButton("downloadreadsrelatedtodominant", "Download"),
+                
+                dataTableOutput("aaa"),
+                
+                dataTableOutput("bbb"),
+                
+                
+                dataTableOutput("ccc")
                 
                
                 

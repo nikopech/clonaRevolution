@@ -15,6 +15,7 @@ library(widyr)
 library(ggplot2)
 library(igraph)
 library(ggraph)
+library(stringdist)
 
  shinyServer(function(input,output,session) {
     
@@ -455,9 +456,53 @@ library(ggraph)
               
               write.table(Related_READS_all_info, "Related_READS_all_info.txt", sep = "\t", row.names = FALSE, quote = FALSE )
               
-              output$relatedtodominant = renderDataTable(Related_READS_all_info)
               
+              
+              CDR3_aminoacids_Related = as.character(Related_READS_all_info$CDR3.IMGT.y)
+              
+              CDR3_aminoacids_Dominant = unique(as.character(Dominant_Reads_all_info$CDR3.IMGT.y))
+              
+              
+              
+              n = stringdistmatrix(CDR3_aminoacids_Related, CDR3_aminoacids_Dominant, method = "hamming")
+              
+              
+              
+              d = data.frame(CDR3_aminoacids_Dominant, CDR3_aminoacids_Related, n)
+              
+              Mismatches_filtering = filter(d, n <= input$numeric2)
+              
+              
+              
+             if (input$check == TRUE) {
+              
+             Mismatches_filtering = filter(Mismatches_filtering, str_detect(Mismatches_filtering$CDR3_aminoacids_Related, input$pattern))
+              
+             }
+             
+              
+              
+               tel = Related_READS_all_info[which(Related_READS_all_info$CDR3.IMGT.y %in% Mismatches_filtering$CDR3_aminoacids_Related), ]
+              
+              
+              
+              
+              
+             #####tables#####
+              
+               #output$relatedtodominant = renderDataTable(Related_READS_all_info)
+              
+              #output$aaa = renderDataTable(d)
+              
+              #output$bbb = renderDataTable(Mismatches_filtering)
+              
+              
+              
+              output$ccc = renderDataTable(tel)
            
+              ####################
+              
+              ########## succed ##########
            
               observeEvent(input$Executepipeline, { 
                 
@@ -483,11 +528,7 @@ library(ggraph)
                shinyalert(title = "Reads_related_to_the_Dominant Downloaded", type = "success")} )
              
              
-             # ##########count distances between Dominant Clone and Related reads################
-              
-              Dominant_CDR3 = as.matrix(Dominant_Reads_all_info$CDR3.IMGT.y)
-              
-              Related_Reads_CDR3 = as.matrix(Related_READS_all_info$CDR3.IMGT.y)
+            
               
               
               
