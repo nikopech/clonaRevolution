@@ -12,8 +12,8 @@ ui <- fluidPage(
   
           navbarPage(
 
-              title = span( "clonal_R_evolution", style = "background-color: dark; color: #e80000"),
-
+              title = "clonalRevolution", # span( "clonal_R_evolution", style = "background-color: dark; color: #e80000"),
+              
               id = "navbar",
  
               position = "fixed-top", 
@@ -77,8 +77,14 @@ ui <- fluidPage(
                             br(),
                             useShinyjs(),
                             # tags$style(appCSS),
+                            
+                            
+                            br(),
+                            
                             uiOutput("uiLoadData"),
                             br(),
+                            
+                            
                            
                             
                             br(),
@@ -132,17 +138,25 @@ ui <- fluidPage(
                   
                           useShinyalert(),  
                           
+                          
+                            
+                            
                           column(3,style = "background-color:#bf6f62",
-                                selectInput("select", h3("Select column"), 
-                                        choices = list("Sequence.number" = 1, "Sequence.ID" = 2, "Functionality" = 3, "V.GENE.and.allele" = 4, "V.REGION.score" = 5, "V.REGION.identity.." = 6, "V.REGION.identity.nt" = 7, "V.REGION.identity....with.ins.del.events." = 8, "V.REGION.identity.nt..with.ins.del.events." = 9, "J.GENE.and.allele" = 10, "J.REGION.score" = 11, "J.REGION.identity.." = 12, "J.REGION.identity.nt" = 13, "D.GENE.and.allele" = 14, "D.REGION.reading.frame" = 15, "CDR1.IMGT.length" = 16, "CDR2.IMGT.length" = 17, "CDR3.IMGT.length" = 18, "CDR.IMGT.lengths" = 19, "FR.IMGT.lengths" = 20, "AA.JUNCTION",	"JUNCTION.frame" = 21, "Orientation" = 22, "Functionality.comment" = 23, "V.REGION.potential.ins.del" = 24, "J.GENE.and.allele.comment" = 25, "V.REGION.insertions" = 26, "V.REGION.deletions" = 27, "Sequence" = 28, "X" = 29), selected = 1),
                                  
-                                textInput("text", h3("Include String"), 
-                                          value = ""
-                                          ),
-                                  br()),
-                            
-                            
-                               
+                                 checkboxInput("checkfunctionalVgene", "Keep only reads with Functional V-Gene", value = FALSE, width = NULL),
+                                 
+                                 br(),
+                                 
+                                 checkboxInput("checkCDR3characters", "Keep only reads that CDR3 has no special characters (X,*,#,.) ", value = FALSE, width = NULL),
+                                 
+                                 br(),
+                                 
+                                 checkboxInput("checklandmarks", "Keep only reads with CDR3 valid start/end landmarks", value = FALSE, width = NULL),
+                                 
+                                 br(), 
+                                 
+                                 checkboxInput("checkproductive", "Keep only reads with productive functionality", value = FALSE, width = NULL), br()
+                          ),   
                                   
          
                             column(1, style = "background-color:#1f0a0a", br(),br(), 
@@ -157,7 +171,22 @@ ui <- fluidPage(
                                   
                                             
                                 tableOutput("filtertable"), br() 
-                                  )
+                                  ),
+                          
+                          column(3,style = "background-color:#bf6f62",
+                                 
+                                 checkboxInput("extrafiltering", "extra user's filtering", value = FALSE, width = NULL),
+                                 
+                                 selectInput("select", h3("Select column"), 
+                                             choices = list("Sequence.number" = 1, "Sequence.ID" = 2, "Functionality" = 3, "V.GENE.and.allele" = 4, "V.REGION.score" = 5, "V.REGION.identity.." = 6, "V.REGION.identity.nt" = 7, "V.REGION.identity....with.ins.del.events." = 8, "V.REGION.identity.nt..with.ins.del.events." = 9, "J.GENE.and.allele" = 10, "J.REGION.score" = 11, "J.REGION.identity.." = 12, "J.REGION.identity.nt" = 13, "D.GENE.and.allele" = 14, "D.REGION.reading.frame" = 15, "CDR1.IMGT.length" = 16, "CDR2.IMGT.length" = 17, "CDR3.IMGT.length" = 18, "CDR.IMGT.lengths" = 19, "FR.IMGT.lengths" = 20, "AA.JUNCTION",	"JUNCTION.frame" = 21, "Orientation" = 22, "Functionality.comment" = 23, "V.REGION.potential.ins.del" = 24, "J.GENE.and.allele.comment" = 25, "V.REGION.insertions" = 26, "V.REGION.deletions" = 27, "Sequence" = 28, "X" = 29), selected = 1),
+                                 
+                                 textInput("text", h3("Include String"), 
+                                           value = ""
+                                 ),
+                                 br()) 
+                          
+                         
+                          
                             
                             
                         
@@ -179,7 +208,9 @@ ui <- fluidPage(
                                                                                     "V Gene + CDR3 Nucleotide","V Gene and Allele + CDR3 Nucleotide",
                                                                                     "J Gene + CDR3 Amino Acids", "J Gene + CDR3 Nucleotide",
                                                                                     "J Gene and Allele + CDR3 Amino Acids", "J Gene and Allele + CDR3 Nucleotide",
-                                                                                    "CDR3 Amino Acids", "CDR3 Nucleotide", "V region + CDR3 Amino Acids", "V region and CDR3 Nucleotide") ), br(),br()
+                                                                                    "CDR3 Amino Acids", "CDR3 Nucleotide", "V Nt sequence + CDR3 Amino Acids", "V Nt sequence and CDR3 Nucleotide", "V.D.J Nt sequence", "V.D.J AA sequence") ), br(),
+                                  
+                                    
                                    ),
                             
                             column(2, style = "background-color:#bf6f62", 
@@ -221,11 +252,17 @@ ui <- fluidPage(
                          
                         h2("Raw Data"),br(),br(),
                         
-                        dataTableOutput("table"),br(),br(),br(),br(),
+                        dataTableOutput("table"), br(),
+                        
+                        numericInput("number", "print dataframe of sample..", value = 1), br(), 
                         
                         h2("Filtered Data"),br(),br(),
                         
-                        dataTableOutput("filtered")
+                        dataTableOutput("filtered"), br(), 
+                        
+                         
+                               
+                               numericInput("number2", "print dataframe of sample..", value = 1)
                                 
                   
                           )  
@@ -245,11 +282,15 @@ ui <- fluidPage(
                 
                 dataTableOutput("clonoTable"),br(),
                 
+                numericInput("nameid3", "print dataframe of sample..", value = 1), br(),
+                
                 actionButton("downloadallclonotypes", "Download"), br(),br(),
                 
                 h2("Dominant Clone"),br(),br(),
               
                dataTableOutput("thedominant"), br(),
+               
+               textOutput("textdominant"),
                
                actionButton("downloadthedominantclone", "Download")
                
@@ -266,22 +307,41 @@ ui <- fluidPage(
                 
                 tags$style(type="text/css", "body {padding-top: 70px;}"), #padding for navigation bar
              
-                h2("Related to Dominant Clone Reads"),
+                h2("Related to Dominant Clone Clonotypes"),br(),br(),
                 
-                 h3("(Same CDR3 length, same IGHV gene family)"), br(),br(),
+                 h3("(from all samples)"), br(),br(),
                 
               
                 
-                dataTableOutput("relatedtodominant"), br(),
-                
-                #actionButton("downloadreadsrelatedtodominant", "Download"),
-                
-                dataTableOutput("aaa"),
-                
-                dataTableOutput("bbb"),
+                dataTableOutput("relatedclonotypes"), br(),
                 
                 
-                dataTableOutput("ccc")
+                
+                
+                
+                
+                h3("(from 1st sample)"), br(),br(),
+                
+                dataTableOutput("related1"),br(),
+                
+                
+                
+                
+                h3("(from 2nd Sample)"), br(),br(),
+                
+                dataTableOutput("related2"),br(),
+                
+                h2("Frequency of Related Clonotypes"),
+                
+                dataTableOutput("freq"),br(),
+                
+               
+                
+                
+                dataTableOutput("ccc"),
+                dataTableOutput("ddd"),
+                
+                actionButton("downloadreadsrelatedtodominant", "Download")
                 
                
                 
@@ -289,7 +349,7 @@ ui <- fluidPage(
               
               tabPanel(
                 
-                "Subclones",
+                "Visualization",
                 
                 value = "subclones",
                 
