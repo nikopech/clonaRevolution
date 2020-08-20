@@ -341,6 +341,7 @@ ui <- fluidPage(
                 dataTableOutput("ccc"),
                 dataTableOutput("ddd"),
                 
+                
                 actionButton("downloadreadsrelatedtodominant", "Download")
                 
                
@@ -355,7 +356,23 @@ ui <- fluidPage(
                 
                 tags$style(type="text/css", "body {padding-top: 70px;}"), #padding for navigation bar
                 
-               
+                
+                plotOutput(
+                  "igraph",
+                  width = "100%",
+                  height = "600px",
+                  click = NULL,
+                  dblclick = NULL,
+                  hover = NULL,
+                  brush = NULL,
+                  inline = FALSE
+                ), br(),
+                
+                h3("Graph Clarification"),br(),
+                
+                
+                
+                dataTableOutput("eee")
                 
                 
                 

@@ -19,6 +19,7 @@ library(stringdist)
 library(stringi)
 library(reshape)
 library(compare)
+library(ggm)
  shinyServer(function(input,output,session) {
     
    
@@ -684,11 +685,11 @@ library(compare)
   
         
         
-                ALL_SAMPLES_RELATED_READS = merge_all(List_of_Related)
+                ALL_SAMPLES_RELATED_CLONOTYPES = merge_all(List_of_Related)
                 
                
                 
-                output$relatedclonotypes = renderDataTable(ALL_SAMPLES_RELATED_READS)
+                output$relatedclonotypes = renderDataTable(ALL_SAMPLES_RELATED_CLONOTYPES)
       
                 
                 
@@ -699,7 +700,7 @@ library(compare)
                   
                   Number_of_related = as.numeric(nrow(List_of_Related[[i]]))
                   
-                  Frequency = Number_of_related / as.numeric(nrow(ALL_SAMPLES_RELATED_READS))
+                  Frequency = Number_of_related / as.numeric(nrow(ALL_SAMPLES_RELATED_CLONOTYPES))
                   id = unique(as.character(List_of_Related[[i]]$id))
                   Freq_df = data_frame(Frequency, id)
                   List_of_Frequencies[[i]] = Freq_df
@@ -731,15 +732,73 @@ library(compare)
                     
                     }
             
-         
+
+               List_for_graph = list(ALL_SAMPLES_RELATED_CLONOTYPES, List_of_Dominants)
               
+               print(List_for_graph)
+               
+               
               
-           
+               ALL_RELATED_AND_DOMINANT = merge_all(List_for_graph)
               
+               Frequency = as.character(ALL_RELATED_AND_DOMINANT$Frequency)  
               
+               CDR3_AA_SUBCLONES =ALL_RELATED_AND_DOMINANT$CDR3.IMGT.y
+               
+               CDR3_AA_SUBCLONES_df = as.data.frame(CDR3_AA_SUBCLONES)
+               
+               CDR3_AA_SUBCLONES_df = cbind(CDR3_AA_SUBCLONES_df, Frequency)
+               
+               # Subclone_rows = left_join(CDR3_AA_SUBCLONES_df, ALL_RELATED_AND_DOMINANT)
+               
+               output$eee = renderDataTable(CDR3_AA_SUBCLONES_df)
+                
+                mismatches_between_subclones = stringdistmatrix(CDR3_AA_SUBCLONES, CDR3_AA_SUBCLONES, method = "hamming")
+                
+                mismatches_between_subclones[mismatches_between_subclones > 1] = 0
+                
+                write.table(mismatches_between_subclones, file = "Matrix.txt", quote = FALSE, sep = "\t", row.names = TRUE )
+                
+                  mismatches_between_subclones = adjMatrix(mismatches_between_subclones)
+                
+                  # TheGraph = graph_from_adjacency_matrix(mismatches_between_subclones, mode = "directed")
+                  # 
+                  # 
+                  # 
+                  # 
+                  # 
+                  # 
+                  # ThePlot = plot(TheGraph, edge.arrow.size=.2, edge.color="orange",
+                  #                   vertex.color="orange", vertex.frame.color="#ffffff",
+                  #                    vertex.label.color="black", vertex.label=row_number(CDR3_AA_SUBCLONES))
               
+                  
+                  # colrs <- c("gray50", "tomato")
+                  # V(TheGraph)$color <- colrs[V(ALL_RELATED_AND_DOMINANT)$id]
+                  
+                  
               
+              # colrs <- c("gray50", "tomato")
+              # V(TheGraph)$color <- colrs[V(TheGraph)$id]
               
+               # CDR3_AA_DOM = List_of_Dominants[[1]]$CDR3.IMGT.y
+               
+               # mismatches_related_dominant = stringdistmatrix(CDR3_AA_SUBCLONES, CDR3_AA_DOM, method = "hamming") 
+               
+               # print(mismatches_related_dominant)
+               
+               
+               
+               # print(CDR3_AA_SUBCLONES)
+              
+              output$igraph = renderPlot({  TheGraph = graph_from_adjacency_matrix(mismatches_between_subclones, mode = "directed")
+              
+                                             plot(TheGraph, edge.arrow.size=.2, edge.color="orange",
+                             vertex.color="#e80000", vertex.frame.color="#d18b71",
+                             vertex.label.color="black", vertex.label=row_number(CDR3_AA_SUBCLONES)) 
+                                             
+                                             })
+                                        
               
               ####################
               
