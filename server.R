@@ -20,7 +20,10 @@ library(stringi)
 library(reshape)
 library(compare)
 library(ggm)
- shinyServer(function(input,output,session) {
+library(visNetwork)
+library(ggrepel)
+
+shinyServer(function(input,output,session) {
     
    
       shinyDirChoose(input,'directory', roots =  c(root = '.'), filetypes = c('', 'txt'))
@@ -121,10 +124,10 @@ library(ggm)
                                                })
        
       
-       
+       observeEvent(input$number, {
          
          output$table = renderDataTable(original.data()[[input$number]])
-        
+       } )
              
        
          observeEvent(input$LoadData, { 
@@ -232,7 +235,9 @@ library(ggm)
             } )  
         
            
+           observeEvent(input$number2, {
            output$filtered <- renderDataTable(filtered.Data()[[input$number2]]) 
+           } )
      
       
        observeEvent(input$FilterButton, { 
@@ -574,41 +579,39 @@ library(ggm)
         
         Clonotypes_without_Dominant = Clonotypes_with_desired_frequency[which(Clonotypes_with_desired_frequency$Frequency != max(Clonotypes_with_desired_frequency$Frequency)),] 
        
-      print("a")  
-       print(Clonotypes_without_Dominant)
+     
           
         
           Clonotypes_with_same_CDR3_length_to_Dominant = filter(Clonotypes_without_Dominant, as.numeric(Clonotypes_without_Dominant$CDR3_length) == as.numeric(The_Dominant$CDR3_length))
           
-       print("b")
-        print(Clonotypes_with_same_CDR3_length_to_Dominant)
+      
         
         
            Column_of_V_Gene_others = as.character(Clonotypes_with_same_CDR3_length_to_Dominant$V_Gene)
         
           V_gene_family = unlist(strsplit(Column_of_V_Gene_others, "-"))[[1]]
           
-          print(V_gene_family)
+       
           
           Clonotypes_with_same_CDR3_length_to_Dominant = cbind(Clonotypes_with_same_CDR3_length_to_Dominant, V_gene_family)
-          print(Clonotypes_with_same_CDR3_length_to_Dominant)
+          
         
           
           Column_of_V_Gene_Dominant = as.character(The_Dominant$V_Gene)
           
           V_gene_family_Dominant = unlist(strsplit(Column_of_V_Gene_Dominant, "-"))[[1]]
           
-          print(V_gene_family_Dominant)
+          
           
           The_Dominant = cbind(The_Dominant, V_gene_family_Dominant)
           
-          print(The_Dominant)
+          
         
           
           Clonotypes_with_same_CDR3_length_and_same_vgenefamily_to_Dom = Clonotypes_with_same_CDR3_length_to_Dominant[which(as.character(Clonotypes_with_same_CDR3_length_to_Dominant$V_gene_family) == as.character(The_Dominant$V_gene_family_Dominant)),]
           
   
-          if ((input$select_clonotype == "V Gene + CDR3 Amino Acids") || (input$select_clonotype == "V Gene and Allele + CDR3 Amino Acids") ||"J Gene + CDR3 Amino Acids"||"J Gene and Allele + CDR3 Amino Acids"||"CDR3 Amino Acids"||"V Nt sequence + CDR3 Amino Acids"||"V.D.J AA sequence")
+          if ((input$select_clonotype == "V Gene + CDR3 Amino Acids") || (input$select_clonotype == "V Gene and Allele + CDR3 Amino Acids") || (input$select_clonotype == "J Gene + CDR3 Amino Acids") || (input$select_clonotype == "J Gene and Allele + CDR3 Amino Acids") || (input$select_clonotype == "CDR3 Amino Acids") || (input$select_clonotype =="V Nt sequence + CDR3 Amino Acids") || (input$select_clonotype == "V.D.J AA sequence"))
 
              
             {  CDR3_aminoacids_other = as.character(Clonotypes_with_same_CDR3_length_and_same_vgenefamily_to_Dom$CDR3.IMGT.y)
@@ -619,24 +622,42 @@ library(ggm)
               
               d = data.frame(CDR3_aminoacids_other, mismatches)
               
-              Mismatches_filtering = filter(d, mismatches <= input$numeric2)}
+              Mismatches_filtering = filter(d, mismatches <= input$numeric2)
+              
+              The_related_clonos = Clonotypes_with_same_CDR3_length_and_same_vgenefamily_to_Dom[which(Clonotypes_with_same_CDR3_length_and_same_vgenefamily_to_Dom$CDR3.IMGT.y %in% Mismatches_filtering$CDR3_aminoacids_other), ]  
+              
+              Mismatches = as.character(Mismatches_filtering$mismatches)
+              
+              The_related_clonos = cbind(The_related_clonos, Mismatches)
+              
+
+              
+              }
           
           else 
             
             { CDR3_nt_other = as.character(Clonotypes_with_same_CDR3_length_and_same_vgenefamily_to_Dom$CDR3.IMGT.x)
             
-            print("booo")
+          
             
             CDR3_nt_Dominant = as.character(The_Dominant$CDR3.IMGT.x)
             
-            print("dooo")
+          
             mismatches = stringdistmatrix(CDR3_nt_other, CDR3_nt_Dominant, method = "hamming")
-            print("toooo")
+          
             d = data.frame(CDR3_nt_other, mismatches)
-            print("tzoyyyy")
+            
             Mismatches_filtering = filter(d, mismatches <= input$numeric2)
             
-            }
+            The_related_clonos = Clonotypes_with_same_CDR3_length_and_same_vgenefamily_to_Dom[which(Clonotypes_with_same_CDR3_length_and_same_vgenefamily_to_Dom$CDR3.IMGT.x %in% Mismatches_filtering$CDR3_nt_other), ]  
+            
+            Mismatches = as.character(Mismatches_filtering$mismatches)
+            
+            The_related_clonos = cbind(The_related_clonos, Mismatches)
+            
+            
+            
+             }
               
               
               
@@ -658,32 +679,47 @@ library(ggm)
               
               
               
-                The_related_clonos = Clonotypes_with_same_CDR3_length_and_same_vgenefamily_to_Dom[which(Clonotypes_with_same_CDR3_length_and_same_vgenefamily_to_Dom$CDR3.IMGT.y %in% Mismatches_filtering$CDR3_aminoacids_other), ]  
                 
-                Mismatches = as.character(Mismatches_filtering$mismatches)
-              
-                The_related_clonos = cbind(The_related_clonos, Mismatches)
                 
               
             
                
                 List_of_Related[[c]] = as.data.frame(The_related_clonos)
                
-               }
+        }
+        
+        
               
-                
+                observeEvent(input$nameid3, {
         
                 output$clonoTable = renderDataTable(List_of_Clonotypes[[input$nameid3]])
         
-                output$thedominant = renderDataTable(List_of_Dominants[[input$nameid3]])       
+                output$thedominant = renderDataTable(List_of_Dominants[[input$nameid3]])    
+                
+                })
                 
                 
                 output$related1 = renderDataTable(List_of_Related[[1]])
                 
+                Mean_Frequency_1 = as.numeric(mean(List_of_Related[[1]]$Frequency))
+                
+                output$meanF1 = renderText(paste("The Mean Frequency of Subclones is", Mean_Frequency_1))
+                
                 output$related2 = renderDataTable(List_of_Related[[2]])
                 
-  
-        
+                Mean_Frequency_2 =  as.numeric(mean(List_of_Related[[2]]$Frequency))
+                
+                output$meanF2 = renderText(paste("The Mean Frequency of Subclones is", Mean_Frequency_2))
+                
+                
+                if ((input$select_clonotype == "V Gene + CDR3 Amino Acids") || (input$select_clonotype == "V Gene and Allele + CDR3 Amino Acids") || (input$select_clonotype == "J Gene + CDR3 Amino Acids") || (input$select_clonotype == "J Gene and Allele + CDR3 Amino Acids") || (input$select_clonotype == "CDR3 Amino Acids") || (input$select_clonotype =="V Nt sequence + CDR3 Amino Acids") || (input$select_clonotype == "V.D.J AA sequence"))
+                
+               
+                  {
+                  
+                  
+                 
+                
         
                 ALL_SAMPLES_RELATED_CLONOTYPES = merge_all(List_of_Related)
                 
@@ -711,8 +747,8 @@ library(ggm)
                 
                 
                  output$freq = renderDataTable(Frequencies)
-        
-              
+                 
+                
         
              
                   if (as.character(List_of_Dominants[[1]][,c(1,2)]) == as.character(List_of_Dominants[[2]][,c(1,2)]))
@@ -732,73 +768,465 @@ library(ggm)
                     
                     }
             
-
-               List_for_graph = list(ALL_SAMPLES_RELATED_CLONOTYPES, List_of_Dominants)
-              
-               print(List_for_graph)
+               
+             
                
                
+               ############ 3 DATA FRAMES where (RELATED AND DOMINANT)
+               
+               
+                List_for_graph_all = list(ALL_SAMPLES_RELATED_CLONOTYPES, List_of_Dominants[[1]], List_of_Dominants[[2]])
+                
+                ALL_RELATED_AND_DOMINANT = merge_all(List_for_graph_all)
+               
+               List_for_graph_1 = list(List_of_Related[[1]], List_of_Dominants[[1]])
+               
+               ONE_RELATED_AND_DOMINANT = merge_all(List_for_graph_1)
+               
+               List_for_graph_2 = list(List_of_Related[[2]], List_of_Dominants[[2]])
               
-               ALL_RELATED_AND_DOMINANT = merge_all(List_for_graph)
-              
-               Frequency = as.character(ALL_RELATED_AND_DOMINANT$Frequency)  
-              
-               CDR3_AA_SUBCLONES =ALL_RELATED_AND_DOMINANT$CDR3.IMGT.y
+               TWO_RELATED_AND_DOMINANT = merge_all(List_for_graph_2)
+               
+              # Common_RELATED_AND_DOMINANT = inner_join(ONE_RELATED_AND_DOMINANT, TWO_RELATED_AND_DOMINANT, by)
+               
+              ######################################################### 
+               
+               
+             
+               ########### for 1 ##################################
+               
+                 
+               Common_Subclones = inner_join(List_of_Related[[1]], List_of_Related[[2]], by = "CDR3.IMGT.y")
+               
+               
+               
+               # "%notin%" = Negate("%in%")
+               # 
+               #  No_common_one = List_of_Related[[1]][which(List_of_Related[[1]]$CDR3.IMGT.y %notin% Common_Subclones$CDR3.IMGT.y),]
+               # 
+               #  view(No_common_one)
+               
+               Frequency = as.character(ONE_RELATED_AND_DOMINANT$Frequency)
+                 
+               n = as.character(ONE_RELATED_AND_DOMINANT$n)
+               
+               V_Gene = as.character(ONE_RELATED_AND_DOMINANT$V_Gene)
+               
+               D_Gene = as.character(ONE_RELATED_AND_DOMINANT$D_Gene)
+               
+               J_Gene = as.character(ONE_RELATED_AND_DOMINANT$J_Gene)
+               
+               CDR3_length = as.character(ONE_RELATED_AND_DOMINANT$CDR3_length)
+               
+               id = as.character(ONE_RELATED_AND_DOMINANT$id)
+               
+               V_gene_family = as.character(ONE_RELATED_AND_DOMINANT$V_gene_family)
+               
+               Mismatches = as.character(ONE_RELATED_AND_DOMINANT$Mismatches)
+             
+               CDR3_AA_SUBCLONES = ONE_RELATED_AND_DOMINANT$CDR3.IMGT.y
+               
+               
                
                CDR3_AA_SUBCLONES_df = as.data.frame(CDR3_AA_SUBCLONES)
                
-               CDR3_AA_SUBCLONES_df = cbind(CDR3_AA_SUBCLONES_df, Frequency)
+               CDR3_AA_SUBCLONES_df = cbind(CDR3_AA_SUBCLONES_df, Frequency, n,  V_Gene, D_Gene, J_Gene, CDR3_length, id, V_gene_family, Mismatches)
                
-               # Subclone_rows = left_join(CDR3_AA_SUBCLONES_df, ALL_RELATED_AND_DOMINANT)
                
-               output$eee = renderDataTable(CDR3_AA_SUBCLONES_df)
+              
+               
+               mismatches_between_subclones = stringdistmatrix(CDR3_AA_SUBCLONES_df$CDR3_AA_SUBCLONES, CDR3_AA_SUBCLONES_df$CDR3_AA_SUBCLONES, method = "hamming")
+               
+               mismatches_between_subclones[mismatches_between_subclones > 1] = 0
+               
+               # write.table(mismatches_between_subclones, file = "Matrix.txt", quote = FALSE, sep = "\t", row.names = TRUE )
+               
+               mismatches_between_subclones = adjMatrix(mismatches_between_subclones)
+               
+               CDR3_AA_SUBCLONES_df$id = as.character(CDR3_AA_SUBCLONES_df$id)
+               
+               CDR3_AA_SUBCLONES_df[which(as.character(CDR3_AA_SUBCLONES_df$CDR3_AA_SUBCLONES) %in% as.character(Common_Subclones$CDR3.IMGT.y)),]$id  = "IN BOTH SAMPLES"
+               
+              
+                if (as.character(List_of_Dominants[[1]][,c(1,2)]) == as.character(List_of_Dominants[[2]][,c(1,2)])) 
                 
-                mismatches_between_subclones = stringdistmatrix(CDR3_AA_SUBCLONES, CDR3_AA_SUBCLONES, method = "hamming")
+                 { CDR3_AA_SUBCLONES_df[which(as.character(CDR3_AA_SUBCLONES_df$CDR3_AA_SUBCLONES) %in% as.character(List_of_Dominants[[1]]$CDR3.IMGT.y)),]$id  = "DOMINANT" }
                 
-                mismatches_between_subclones[mismatches_between_subclones > 1] = 0
                 
-                write.table(mismatches_between_subclones, file = "Matrix.txt", quote = FALSE, sep = "\t", row.names = TRUE )
+             
+               output$graph1 = renderDataTable(CDR3_AA_SUBCLONES_df)
+               
+               output$igraph1 = renderPlot({  TheGraph = graph_from_adjacency_matrix(mismatches_between_subclones, mode = "directed")
+               
+             
+               
+               V(TheGraph)$color <- as.factor(CDR3_AA_SUBCLONES_df$id)
+               
+                V(TheGraph)$size <- CDR3_AA_SUBCLONES_df$Frequency
+              
+               plot(TheGraph, edge.arrow.size=.2, edge.color="orange",
+                    # vertex.color="#e80000",
+                    vertex.frame.color="#d18b71",
+                    vertex.label.color="black", vertex.label=row_number(CDR3_AA_SUBCLONES)) 
+               
+               
+               })  
+              
+               
+                Frequency_ = as.character(TWO_RELATED_AND_DOMINANT$Frequency)
+
+                n_ = as.character(TWO_RELATED_AND_DOMINANT$n)
+
+                V_Gene_ = as.character(TWO_RELATED_AND_DOMINANT$V_Gene)
+
+                D_Gene_ = as.character(TWO_RELATED_AND_DOMINANT$D_Gene)
+
+                J_Gene_ = as.character(TWO_RELATED_AND_DOMINANT$J_Gene)
+
+                CDR3_length_ = as.character(TWO_RELATED_AND_DOMINANT$CDR3_length)
+
+                id_ = as.character(TWO_RELATED_AND_DOMINANT$id)
+
+                V_gene_family_ = as.character(TWO_RELATED_AND_DOMINANT$V_gene_family)
+
+                Mismatches_ = as.character(TWO_RELATED_AND_DOMINANT$Mismatches)
+
+                CDR3_AA_SUBCLONES_2 = TWO_RELATED_AND_DOMINANT$CDR3.IMGT.y
+
+
+
+                CDR3_AA_SUBCLONES_2_df = as.data.frame(CDR3_AA_SUBCLONES_2)
+
+                CDR3_AA_SUBCLONES_2_df = cbind(CDR3_AA_SUBCLONES_2_df, Frequency_, n_,  V_Gene_, D_Gene_, J_Gene_, CDR3_length_, id_, V_gene_family_, Mismatches_)
+
+
+
+
+                mismatches_between_subclones_ = stringdistmatrix(CDR3_AA_SUBCLONES_2_df$CDR3_AA_SUBCLONES_2, CDR3_AA_SUBCLONES_2_df$CDR3_AA_SUBCLONES_2, method = "hamming")
+
+                mismatches_between_subclones_[mismatches_between_subclones_ > 1] = 0
+
+               # # write.table(mismatches_between_subclones, file = "Matrix.txt", quote = FALSE, sep = "\t", row.names = TRUE )
+
+                mismatches_between_subclones_ = adjMatrix(mismatches_between_subclones_)
+
+                CDR3_AA_SUBCLONES_2_df$id = as.character(CDR3_AA_SUBCLONES_2_df$id)
+
+                CDR3_AA_SUBCLONES_2_df[which(as.character(CDR3_AA_SUBCLONES_2_df$CDR3_AA_SUBCLONES_2) %in% as.character(Common_Subclones$CDR3.IMGT.y)),]$id  = "IN BOTH SAMPLES"
+
+
+                if (as.character(List_of_Dominants[[1]][,c(1,2)]) == as.character(List_of_Dominants[[2]][,c(1,2)]))
+
+                { CDR3_AA_SUBCLONES_2_df[which(as.character(CDR3_AA_SUBCLONES_2_df$CDR3_AA_SUBCLONES_2) %in% as.character(List_of_Dominants[[2]]$CDR3.IMGT.y)),]$id  = "DOMINANT" }
+
+
+
+                output$graph2 = renderDataTable(CDR3_AA_SUBCLONES_2_df)
+
+                output$igraph2 = renderPlot({  TheGraph2 = graph_from_adjacency_matrix(mismatches_between_subclones_, mode = "directed")
+
+                V(TheGraph2)$color <- as.factor(CDR3_AA_SUBCLONES_2_df$id)
+
+                V(TheGraph2)$size <- CDR3_AA_SUBCLONES_2_df$Frequency
+
+                plot(TheGraph2, edge.arrow.size=.2, edge.color="orange",
+                    # vertex.color="#e80000",
+                     vertex.frame.color="#d18b71",
+                     vertex.label.color="black", vertex.label=row_number(CDR3_AA_SUBCLONES_2))
+
+
+                })
                 
+                
+                DF_FOR_PLOT = full_join(List_of_Related[[1]], List_of_Related[[2]], by="CDR3.IMGT.y")
+                
+                  if (NA %in% DF_FOR_PLOT$Frequency.y)
+                
+               { DF_FOR_PLOT[which(is.na(DF_FOR_PLOT$Frequency.y)),]$Frequency.y = 0 } 
+                
+                if (NA %in% DF_FOR_PLOT$Frequency.x) 
+                
+                { DF_FOR_PLOT[which(is.na(DF_FOR_PLOT$Frequency.x)),]$Frequency.x = 0 }
+                
+
+               output$dotplot = renderPlot({ ggplot(DF_FOR_PLOT, aes(x = Frequency.x, y = Frequency.y) ) + 
+                   geom_point(size = 3) + geom_label_repel(aes(label = rownames(DF_FOR_PLOT)), box.padding   = 0.35, point.padding = 0.5,
+                 segment.color = 'red')  +  scale_x_continuous(limits = c(0, 0.005)) + scale_y_continuous(limits = c(0, 0.005)) + geom_smooth() 
+                 })
+               
+               output$dottable = renderDataTable(DF_FOR_PLOT)
+               
+               DF_OF_DOMINANT = full_join(List_of_Dominants[[1]], List_of_Dominants[[2]], by = "CDR3.IMGT.y")
+               
+               output$domdotplot = renderPlot({ ggplot(DF_OF_DOMINANT, aes(x = Frequency.x, y = Frequency.y) ) + geom_point(size = 4)
+                 })
+               
+               output$domdottable = renderDataTable(DF_OF_DOMINANT)
+              
+               
+                 }
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+              
+                
+                
+                else 
+                  
+                {
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  ALL_SAMPLES_RELATED_CLONOTYPES = merge_all(List_of_Related)
+                  
+                  
+                  
+                  output$relatedclonotypes = renderDataTable(ALL_SAMPLES_RELATED_CLONOTYPES)
+                  
+                  
+                  
+                  
+                  List_of_Frequencies = list()
+                  
+                  for (i in 1:length(List_of_Related)) {
+                    
+                    Number_of_related = as.numeric(nrow(List_of_Related[[i]]))
+                    
+                    Frequency = Number_of_related / as.numeric(nrow(ALL_SAMPLES_RELATED_CLONOTYPES))
+                    id = unique(as.character(List_of_Related[[i]]$id))
+                    Freq_df = data_frame(Frequency, id)
+                    List_of_Frequencies[[i]] = Freq_df
+                    
+                  }
+                  
+                  Frequencies = merge_all(List_of_Frequencies)
+                  
+                  
+                  output$freq = renderDataTable(Frequencies)
+                  
+                  
+                  
+                  
+                  if (as.character(List_of_Dominants[[1]][,c(1,2)]) == as.character(List_of_Dominants[[2]][,c(1,2)]))
+                    
+                  { 
+                    output$textdominant = renderText("SAME DOMINANT CLONE BETWEEN SAMPLES")  }
+                  
+                  else {
+                    
+                    Related_to_2nd_Dom_and_1st_Dominant = List_of_Related[[2]][which(as.character(List_of_Related[[2]][,c(1,2)]) == as.character(List_of_Dominants[[1]][,c(1,2)]))]
+                    
+                    Related_to_1st_Dom_and_2nd_Dominant = List_of_Related[[1]][which(as.character(List_of_Related[[1]][,c(1,2)]) == as.character(List_of_Dominants[[2]][,c(1,2)]))]
+                    
+                    output$ccc = renderDataTable(Related_to_2nd_Dom_and_1st_Dominant)
+                    
+                    output$ddd = renderDataTable(Related_to_1st_Dom_and_2nd_Dominant)
+                    
+                  }
+                  
+                  
+                  List_for_graph_all = list(ALL_SAMPLES_RELATED_CLONOTYPES, List_of_Dominants[[1]], List_of_Dominants[[2]])
+                  
+                  ALL_RELATED_AND_DOMINANT = merge_all(List_for_graph_all)
+                  
+                  List_for_graph_1 = list(List_of_Related[[1]], List_of_Dominants[[1]])
+                  
+                  ONE_RELATED_AND_DOMINANT = merge_all(List_for_graph_1)
+                  
+                  List_for_graph_2 = list(List_of_Related[[2]], List_of_Dominants[[2]])
+                  
+                  TWO_RELATED_AND_DOMINANT = merge_all(List_for_graph_2)
+                  
+                  print(ONE_RELATED_AND_DOMINANT)
+                  
+                  print(TWO_RELATED_AND_DOMINANT)
+                  
+                  ######################################################### 
+                  
+                  
+                  
+                  ########### for 1 ##################################
+                  
+                  
+                  Common_Subclones = inner_join(List_of_Related[[1]], List_of_Related[[2]], by = "CDR3.IMGT.x")
+                  
+                  
+                  
+                  Frequency = as.character(ONE_RELATED_AND_DOMINANT$Frequency)
+                  
+                  n = as.character(ONE_RELATED_AND_DOMINANT$n)
+                  
+                  V_Gene = as.character(ONE_RELATED_AND_DOMINANT$V_Gene)
+                  
+                  D_Gene = as.character(ONE_RELATED_AND_DOMINANT$D_Gene)
+                  
+                  J_Gene = as.character(ONE_RELATED_AND_DOMINANT$J_Gene)
+                  
+                  CDR3_length = as.character(ONE_RELATED_AND_DOMINANT$CDR3_length)
+                  
+                  id = as.character(ONE_RELATED_AND_DOMINANT$id)
+                  
+                  V_gene_family = as.character(ONE_RELATED_AND_DOMINANT$V_gene_family)
+                  
+                  Mismatches = as.character(ONE_RELATED_AND_DOMINANT$Mismatches)
+                  
+                  CDR3_nt_SUBCLONES = ONE_RELATED_AND_DOMINANT$CDR3.IMGT.x
+                  
+                  
+                  
+                  CDR3_nt_SUBCLONES_df = as.data.frame(CDR3_nt_SUBCLONES)
+                  
+                  CDR3_nt_SUBCLONES_df = cbind(CDR3_nt_SUBCLONES_df, Frequency, n,  V_Gene, D_Gene, J_Gene, CDR3_length, id, V_gene_family, Mismatches)
+                  
+                  
+                  
+                  
+                  mismatches_between_subclones = stringdistmatrix(CDR3_nt_SUBCLONES_df$CDR3_nt_SUBCLONES, CDR3_nt_SUBCLONES_df$CDR3_nt_SUBCLONES, method = "hamming")
+                  
+                  mismatches_between_subclones[mismatches_between_subclones > 1] = 0
+                  
+                  # write.table(mismatches_between_subclones, file = "Matrix.txt", quote = FALSE, sep = "\t", row.names = TRUE )
+                  
                   mismatches_between_subclones = adjMatrix(mismatches_between_subclones)
-                
-                  # TheGraph = graph_from_adjacency_matrix(mismatches_between_subclones, mode = "directed")
-                  # 
-                  # 
-                  # 
-                  # 
-                  # 
-                  # 
-                  # ThePlot = plot(TheGraph, edge.arrow.size=.2, edge.color="orange",
-                  #                   vertex.color="orange", vertex.frame.color="#ffffff",
-                  #                    vertex.label.color="black", vertex.label=row_number(CDR3_AA_SUBCLONES))
-              
                   
-                  # colrs <- c("gray50", "tomato")
-                  # V(TheGraph)$color <- colrs[V(ALL_RELATED_AND_DOMINANT)$id]
+                  CDR3_nt_SUBCLONES_df$id = as.character(CDR3_nt_SUBCLONES_df$id)
+                  
+                  CDR3_nt_SUBCLONES_df[which(as.character(CDR3_nt_SUBCLONES_df$CDR3_nt_SUBCLONES) %in% as.character(Common_Subclones$CDR3.IMGT.x)),]$id  = "IN BOTH SAMPLES"
                   
                   
-              
-              # colrs <- c("gray50", "tomato")
-              # V(TheGraph)$color <- colrs[V(TheGraph)$id]
-              
-               # CDR3_AA_DOM = List_of_Dominants[[1]]$CDR3.IMGT.y
-               
-               # mismatches_related_dominant = stringdistmatrix(CDR3_AA_SUBCLONES, CDR3_AA_DOM, method = "hamming") 
-               
-               # print(mismatches_related_dominant)
-               
-               
-               
-               # print(CDR3_AA_SUBCLONES)
-              
-              output$igraph = renderPlot({  TheGraph = graph_from_adjacency_matrix(mismatches_between_subclones, mode = "directed")
-              
-                                             plot(TheGraph, edge.arrow.size=.2, edge.color="orange",
-                             vertex.color="#e80000", vertex.frame.color="#d18b71",
-                             vertex.label.color="black", vertex.label=row_number(CDR3_AA_SUBCLONES)) 
-                                             
-                                             })
-                                        
+                  if (as.character(List_of_Dominants[[1]][,c(1,2)]) == as.character(List_of_Dominants[[2]][,c(1,2)])) 
+                    
+                  { CDR3_nt_SUBCLONES_df[which(as.character(CDR3_nt_SUBCLONES_df$CDR3_nt_SUBCLONES) %in% as.character(List_of_Dominants[[1]]$CDR3.IMGT.x)),]$id  = "DOMINANT" }
+                  
+                  
+                  
+                  output$graph1 = renderDataTable(CDR3_nt_SUBCLONES_df)
+                  
+                  output$igraph1 = renderPlot({  TheGraph = graph_from_adjacency_matrix(mismatches_between_subclones, mode = "directed")
+                  
+                  V(TheGraph)$color <- as.factor(CDR3_nt_SUBCLONES_df$id)
+                  
+                  V(TheGraph)$size <- CDR3_nt_SUBCLONES_df$Frequency
+                  
+                  plot(TheGraph, edge.arrow.size=.2, edge.color="orange",
+                       # vertex.color="#e80000",
+                       vertex.frame.color="#d18b71",
+                       vertex.label.color="black", vertex.label=row_number(CDR3_nt_SUBCLONES)) 
+                  
+                  
+                  })  
+                  
+                  
+                  Frequency_ = as.character(TWO_RELATED_AND_DOMINANT$Frequency)
+                  
+                  n_ = as.character(TWO_RELATED_AND_DOMINANT$n)
+                  
+                  V_Gene_ = as.character(TWO_RELATED_AND_DOMINANT$V_Gene)
+                  
+                  D_Gene_ = as.character(TWO_RELATED_AND_DOMINANT$D_Gene)
+                  
+                  J_Gene_ = as.character(TWO_RELATED_AND_DOMINANT$J_Gene)
+                  
+                  CDR3_length_ = as.character(TWO_RELATED_AND_DOMINANT$CDR3_length)
+                  
+                  id_ = as.character(TWO_RELATED_AND_DOMINANT$id)
+                  
+                  V_gene_family_ = as.character(TWO_RELATED_AND_DOMINANT$V_gene_family)
+                  
+                  Mismatches_ = as.character(TWO_RELATED_AND_DOMINANT$Mismatches)
+                  
+                  CDR3_nt_SUBCLONES_2 = TWO_RELATED_AND_DOMINANT$CDR3.IMGT.x
+                  
+                  
+                  
+                  CDR3_nt_SUBCLONES_2_df = as.data.frame(CDR3_nt_SUBCLONES_2)
+                  
+                  CDR3_nt_SUBCLONES_2_df = cbind(CDR3_nt_SUBCLONES_2_df, Frequency_, n_,  V_Gene_, D_Gene_, J_Gene_, CDR3_length_, id_, V_gene_family_, Mismatches_)
+                  
+                  
+                  
+                  
+                  mismatches_between_subclones_ = stringdistmatrix(CDR3_nt_SUBCLONES_2_df$CDR3_nt_SUBCLONES_2, CDR3_nt_SUBCLONES_2_df$CDR3_nt_SUBCLONES_2, method = "hamming")
+                  
+                  mismatches_between_subclones_[mismatches_between_subclones_ > 1] = 0
+                  
+                  # # write.table(mismatches_between_subclones, file = "Matrix.txt", quote = FALSE, sep = "\t", row.names = TRUE )
+                  
+                  mismatches_between_subclones_ = adjMatrix(mismatches_between_subclones_)
+                  
+                  CDR3_nt_SUBCLONES_2_df$id = as.character(CDR3_nt_SUBCLONES_2_df$id)
+                  
+                  CDR3_nt_SUBCLONES_2_df[which(as.character(CDR3_nt_SUBCLONES_2_df$CDR3_nt_SUBCLONES_2) %in% as.character(Common_Subclones$CDR3.IMGT.x)),]$id  = "IN BOTH SAMPLES"
+                  
+                  
+                  if (as.character(List_of_Dominants[[1]][,c(1,2)]) == as.character(List_of_Dominants[[2]][,c(1,2)]))
+                    
+                  { CDR3_nt_SUBCLONES_2_df[which(as.character(CDR3_nt_SUBCLONES_2_df$CDR3_nt_SUBCLONES_2) %in% as.character(List_of_Dominants[[2]]$CDR3.IMGT.x)),]$id  = "DOMINANT" }
+                  
+                  
+                  
+                  output$graph2 = renderDataTable(CDR3_nt_SUBCLONES_2_df)
+                  
+                  output$igraph2 = renderPlot({  TheGraph2 = graph_from_adjacency_matrix(mismatches_between_subclones_, mode = "directed")
+                  
+                  V(TheGraph2)$color <- as.factor(CDR3_nt_SUBCLONES_2_df$id)
+                  
+                  V(TheGraph2)$size <- CDR3_nt_SUBCLONES_2_df$Frequency
+                  
+                  plot(TheGraph2, edge.arrow.size=.2, edge.color="orange",
+                       # vertex.color="#e80000",
+                       vertex.frame.color="#d18b71",
+                       vertex.label.color="black", vertex.label=row_number(CDR3_nt_SUBCLONES_2))
+                  
+                  
+                  })
+                  
+                  DF_FOR_PLOT = full_join(List_of_Related[[1]], List_of_Related[[2]], by="CDR3.IMGT.x")
+                  
+                  if (NA %in% DF_FOR_PLOT$Frequency.y)
+                    
+                  { DF_FOR_PLOT[which(is.na(DF_FOR_PLOT$Frequency.y)),]$Frequency.y = 0 } 
+                  
+                  if (NA %in% DF_FOR_PLOT$Frequency.x) 
+                    
+                  { DF_FOR_PLOT[which(is.na(DF_FOR_PLOT$Frequency.x)),]$Frequency.x = 0 }
+                  
+                  
+                  output$dotplot = renderPlot({ ggplot(DF_FOR_PLOT, aes(x = Frequency.x, y = Frequency.y) ) + 
+                      geom_point(size = 3) + geom_label_repel(aes(label = rownames(DF_FOR_PLOT)), box.padding   = 0.35, point.padding = 0.5,
+                                                              segment.color = 'red')  +  scale_x_continuous(limits = c(0, 0.005)) + scale_y_continuous(limits = c(0, 0.005)) + geom_smooth() 
+                  })
+                  
+                  output$dottable = renderDataTable(DF_FOR_PLOT)
+                  
+                  DF_OF_DOMINANT = full_join(List_of_Dominants[[1]], List_of_Dominants[[2]], by = "CDR3.IMGT.x")
+                  
+                  output$domdotplot = renderPlot({ ggplot(DF_OF_DOMINANT, aes(x = Frequency.x, y = Frequency.y) ) + geom_point(size = 4)
+                  })
+                  
+                  output$domdottable = renderDataTable(DF_OF_DOMINANT)
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                }
               
               ####################
               

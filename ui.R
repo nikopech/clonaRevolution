@@ -254,7 +254,7 @@ ui <- fluidPage(
                         
                         dataTableOutput("table"), br(),
                         
-                        numericInput("number", "print dataframe of sample..", value = 1), br(), 
+                        numericInput("number", "print dataframe of sample..", value = 1, width = 100), br(), 
                         
                         h2("Filtered Data"),br(),br(),
                         
@@ -262,7 +262,7 @@ ui <- fluidPage(
                         
                          
                                
-                               numericInput("number2", "print dataframe of sample..", value = 1)
+                               numericInput("number2", "print dataframe of sample..", value = 1, width = 100)
                                 
                   
                           )  
@@ -282,7 +282,7 @@ ui <- fluidPage(
                 
                 dataTableOutput("clonoTable"),br(),
                 
-                numericInput("nameid3", "print dataframe of sample..", value = 1), br(),
+                numericInput("nameid3", "print dataframe of sample..", value = 1, width = 100), br(),
                 
                 actionButton("downloadallclonotypes", "Download"), br(),br(),
                 
@@ -324,6 +324,8 @@ ui <- fluidPage(
                 
                 dataTableOutput("related1"),br(),
                 
+                textOutput("meanF1"),br(),
+                
                 
                 
                 
@@ -331,7 +333,9 @@ ui <- fluidPage(
                 
                 dataTableOutput("related2"),br(),
                 
-                h2("Frequency of Related Clonotypes"),
+                textOutput("meanF2"),br(),
+                
+                h2("Relative Frequency of Subclones (between samples)"),
                 
                 dataTableOutput("freq"),br(),
                 
@@ -357,22 +361,65 @@ ui <- fluidPage(
                 tags$style(type="text/css", "body {padding-top: 70px;}"), #padding for navigation bar
                 
                 
-                plotOutput(
-                  "igraph",
-                  width = "100%",
-                  height = "600px",
+               h2("1st Sample Graph"),
+                
+                 plotOutput(
+                  "igraph1",
+                  width = "170%",
+                  height = "750px",
                   click = NULL,
                   dblclick = NULL,
                   hover = NULL,
                   brush = NULL,
                   inline = FALSE
-                ), br(),
+                ),
                 
-                h3("Graph Clarification"),br(),
+                h3("Graph Clarification / 1st Sample"),br(),
                 
                 
                 
-                dataTableOutput("eee")
+                dataTableOutput("graph1"), 
+                
+                br(), 
+               
+               h2("2nd Sample Graph"),
+                
+                plotOutput(
+                  "igraph2",
+                  width = "170%",
+                  height = "750px",
+                  click = NULL,
+                  dblclick = NULL,
+                  hover = NULL,
+                  brush = NULL,
+                  inline = FALSE
+                ),
+                
+                h3("Graph Clarification / 2nd Sample"),br(),
+                
+                
+                
+                dataTableOutput("graph2"), br(), 
+               
+               h2("Subclones Frequency Dotplot"), br(),
+                
+                plotOutput("dotplot", width = "170%",
+                           height = "750px"), br(), 
+               
+               h3("Dotplot Clarification"), br(),
+               
+               dataTableOutput("dottable"), br(), 
+               
+              
+                h2("Dominant Clones Frequency Dotplot"), br(),
+               
+               plotOutput("domdotplot"), br(),
+               
+               h3("Dotplot Clarification"), br(),
+               
+               dataTableOutput("domdottable")
+               
+               
                 
                 
                 
