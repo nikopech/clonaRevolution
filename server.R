@@ -910,14 +910,14 @@ shinyServer(function(input,output,session) {
 
                 mismatches_between_subclones_ = adjMatrix(mismatches_between_subclones_)
 
-                CDR3_AA_SUBCLONES_2_df$id = as.character(CDR3_AA_SUBCLONES_2_df$id)
+                CDR3_AA_SUBCLONES_2_df$id_ = as.character(CDR3_AA_SUBCLONES_2_df$id_)
 
-                CDR3_AA_SUBCLONES_2_df[which(as.character(CDR3_AA_SUBCLONES_2_df$CDR3_AA_SUBCLONES_2) %in% as.character(Common_Subclones$CDR3.IMGT.y)),]$id  = "IN BOTH SAMPLES"
+                CDR3_AA_SUBCLONES_2_df[which(as.character(CDR3_AA_SUBCLONES_2_df$CDR3_AA_SUBCLONES_2) %in% as.character(Common_Subclones$CDR3.IMGT.y)),]$id_  = "IN BOTH SAMPLES"
 
 
                 if (as.character(List_of_Dominants[[1]][,c(1,2)]) == as.character(List_of_Dominants[[2]][,c(1,2)]))
 
-                { CDR3_AA_SUBCLONES_2_df[which(as.character(CDR3_AA_SUBCLONES_2_df$CDR3_AA_SUBCLONES_2) %in% as.character(List_of_Dominants[[2]]$CDR3.IMGT.y)),]$id  = "DOMINANT" }
+                { CDR3_AA_SUBCLONES_2_df[which(as.character(CDR3_AA_SUBCLONES_2_df$CDR3_AA_SUBCLONES_2) %in% as.character(List_of_Dominants[[2]]$CDR3.IMGT.y)),]$id_  = "DOMINANT" }
 
 
 
@@ -944,21 +944,21 @@ shinyServer(function(input,output,session) {
                 
                { DF_FOR_PLOT[which(is.na(DF_FOR_PLOT$Frequency.y)),]$Frequency.y = 0 } 
                 
-                if (NA %in% DF_FOR_PLOT$Frequency.x) 
-                
+                if (NA %in% DF_FOR_PLOT$Frequency.x)
+
                 { DF_FOR_PLOT[which(is.na(DF_FOR_PLOT$Frequency.x)),]$Frequency.x = 0 }
                 
 
                output$dotplot = renderPlot({ ggplot(DF_FOR_PLOT, aes(x = Frequency.x, y = Frequency.y) ) + 
                    geom_point(size = 3) + geom_label_repel(aes(label = rownames(DF_FOR_PLOT)), box.padding   = 0.35, point.padding = 0.5,
-                 segment.color = 'red')  +  scale_x_continuous(limits = c(0, 0.005)) + scale_y_continuous(limits = c(0, 0.005)) + geom_smooth() 
+                 segment.color = 'red')  +  coord_cartesian(xlim =c(0, 0.004), ylim = c(0, 0.004)) + geom_smooth() 
                  })
                
                output$dottable = renderDataTable(DF_FOR_PLOT)
                
                DF_OF_DOMINANT = full_join(List_of_Dominants[[1]], List_of_Dominants[[2]], by = "CDR3.IMGT.y")
                
-               output$domdotplot = renderPlot({ ggplot(DF_OF_DOMINANT, aes(x = Frequency.x, y = Frequency.y) ) + geom_point(size = 4)
+               output$domdotplot = renderPlot({ ggplot(DF_OF_DOMINANT, aes(x = Frequency.x, y = Frequency.y) ) + geom_point(size = 4) + coord_cartesian(xlim =c(0, 1), ylim = c(0, 1)) 
                  })
                
                output$domdottable = renderDataTable(DF_OF_DOMINANT)
@@ -1207,14 +1207,14 @@ shinyServer(function(input,output,session) {
                   
                   output$dotplot = renderPlot({ ggplot(DF_FOR_PLOT, aes(x = Frequency.x, y = Frequency.y) ) + 
                       geom_point(size = 3) + geom_label_repel(aes(label = rownames(DF_FOR_PLOT)), box.padding   = 0.35, point.padding = 0.5,
-                                                              segment.color = 'red')  +  scale_x_continuous(limits = c(0, 0.005)) + scale_y_continuous(limits = c(0, 0.005)) + geom_smooth() 
+                                                              segment.color = 'red')  +  coord_cartesian(xlim =c(0, 0.004), ylim = c(0, 0.004)) + geom_smooth() 
                   })
                   
                   output$dottable = renderDataTable(DF_FOR_PLOT)
                   
                   DF_OF_DOMINANT = full_join(List_of_Dominants[[1]], List_of_Dominants[[2]], by = "CDR3.IMGT.x")
                   
-                  output$domdotplot = renderPlot({ ggplot(DF_OF_DOMINANT, aes(x = Frequency.x, y = Frequency.y) ) + geom_point(size = 4)
+                  output$domdotplot = renderPlot({ ggplot(DF_OF_DOMINANT, aes(x = Frequency.x, y = Frequency.y) ) + geom_point(size = 4) + coord_cartesian(xlim =c(0, 1), ylim = c(0, 1)) 
                   })
                   
                   output$domdottable = renderDataTable(DF_OF_DOMINANT)
